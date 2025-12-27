@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skincare Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --sage-bg: #acc1b4; }
+        body { 
+            background-color: var(--sage-bg); 
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .serif { font-family: 'Playfair Display', serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .card-shadow { box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15); }
+        .animate-blink { animation: blink 1.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body>
+    <div id="app" class="min-h-screen pb-24">
+        
+        <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/20 z-50 flex justify-around py-4 shadow-2xl">
+            <button @click="currentTab = 'routine'" :class="currentTab === 'routine' ? 'text-teal-900 font-bold scale-110' : 'text-slate-400'" class="transition-all">
+                <span class="block text-xl">🗓️</span>
+                <span class="text-[10px] uppercase tracking-widest mt-1">Routine</span>
+            </button>
+            <button @click="currentTab = 'stock'" :class="currentTab === 'stock' ? 'text-teal-900 font-bold scale-110' : 'text-slate-400'" class="transition-all">
+                <span class="block text-xl">📦</span>
+                <span class="text-[10px] uppercase tracking-widest mt-1">Stock</span>
+            </button>
+        </nav>
+
+        <div v-if="currentTab === 'routine'">
+            <header class="p-8 pb-4">
+                <div class="flex justify-between items-start mb-2">
+                    <h1 class="text-4xl serif text-white drop-shadow-sm italic">Skincare Journal</h1>
+                    <button @click="isInflamed = !isInflamed" 
+                        :class="['px-4 py-2 rounded-2xl text-[10px] font-black transition-all card-shadow border-2', 
+                                 isInflamed ? 'bg-orange-500 border-orange-400 text-white animate-pulse' : 'bg-white/20 border-white/40 text-white']">
+                        {{ isInflamed ? '下巴發炎中' : '穩定模式' }}
+                    </button>
+                </div>
+                <p class="text-white/80 text-[10px] tracking-[0.2em] font-medium uppercase">32歲 · 英國去斑模式 · METABOLIC</p>
+            </header>
+
+            <div class="flex overflow-x-auto px-6 gap-4 no-scrollbar mb-6">
+                <button v-for="(day, index) in weekSchedule" :key="index"
+                    @click="activeDay = index"
+                    :class="['flex-shrink-0 w-14 h-14 rounded-2xl flex flex-col items-center justify-center text-xs transition-all',
+                             activeDay === index ? 'bg-white text-teal-900 font-bold card-shadow scale-110' : 'bg-white/10 text-white border border-white/10']">
+                    {{ day.name }}
+                </button>
+            </div>
+
+            <main class="px-6 space-y-6 max-w-md mx-auto">
+                <div class="bg-white/95 backdrop-blur-md rounded-[2.5rem] p-8 card-shadow">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-2xl">☀️</span>
+                        <h2 class="text-xl serif text-teal-950 italic font-bold">Morning Defense</h2>
+                    </div>
+                    <ul class="space-y-6">
+                        <li v-for="(step, i) in weekSchedule[activeDay].am" :key="i" class="flex items-start gap-4">
+                            <span class="w-6 h-6 rounded-full bg-teal-900 text-white text-[10px] flex items-center justify-center shrink-0 mt-1 font-bold">{{ i+1 }}</span>
+                            <div>
+                                <p class="text-slate-800 font-bold leading-tight">{{ step.product }}</p>
+                                <p class="text-[10px] text-teal-700/60 uppercase tracking-widest mt-1 font-semibold">{{ step.note }}</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white/95 backdrop-blur-md rounded-[2.5rem] p-8 card-shadow">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-2xl">🌙</span>
+                        <h2 class="text-xl serif text-indigo-950 italic font-bold">Night Treatment</h2>
+                    </div>
+                    <div class="mb-6 p-4 rounded-2xl bg-teal-50/50 border border-teal-100/50">
+                        <p class="text-[9px] font-black text-teal-800/40 uppercase tracking-[0.2em] mb-1 text-center">Focus Target</p>
+                        <p class="text-sm text-teal-900 font-medium italic text-center">{{ isInflamed ? '局部發炎應急修復模式' : weekSchedule[activeDay].focus }}</p>
+                    </div>
+                    <ul class="space-y-6">
+                        <template v-if="isInflamed">
+                            <li class="flex items-start gap-4">
+                                <span class="w-6 h-6 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center shrink-0 mt-1 font-bold">1</span>
+                                <p class="text-slate-800 font-bold leading-tight">Bicelle Hydra B5 Gel <br><span class="text-[10px] text-orange-600 font-medium">補水基底</span></p>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <span class="w-6 h-6 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center shrink-0 mt-1 font-bold">2</span>
+                                <p class="text-slate-800 font-bold leading-tight">LRP B5 Baume <br><span class="text-[10px] text-orange-600 font-medium italic">厚塗發炎處 (下巴)</span></p>
+                            </li>
+                        </template>
+                        <template v-else>
+                            <li v-for="(step, i) in weekSchedule[activeDay].pm" :key="i" class="flex items-start gap-4">
+                                <span class="w-6 h-6 rounded-full bg-indigo-900 text-white text-[10px] flex items-center justify-center shrink-0 mt-1 font-bold">{{ i+1 }}</span>
+                                <div>
+                                    <p class="text-slate-800 font-bold leading-tight">{{ step.product }}</p>
+                                    <p class="text-[10px] text-indigo-700/60 uppercase tracking-widest mt-1 font-semibold">{{ step.note }}</p>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </main>
+        </div>
+
+        <div v-if="currentTab === 'stock'" class="p-8 max-w-md mx-auto">
+            <div class="flex justify-between items-center mb-8 text-white">
+                <h1 class="text-4xl serif italic">Stock List</h1>
+                <div v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </div>
+
+            <div class="space-y-6">
+                <div v-for="(item, index) in stockList" :key="index" 
+                     class="bg-white/95 rounded-[2.5rem] p-6 card-shadow relative overflow-hidden transition-all">
+                    
+                    <div v-if="item.count <= 0" class="absolute left-0 top-0 bottom-0 w-2 bg-red-500 animate-pulse"></div>
+
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="mb-1">
+                                <span class="bg-teal-50 text-teal-700 text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">{{ item.category }}</span>
+                            </div>
+                            <h2 class="serif text-2xl text-teal-950 font-bold leading-tight italic">{{ item.brand }}</h2>
+                            <p class="text-sm font-semibold text-slate-500 mt-1 leading-snug">{{ item.name }}</p>
+                            
+                            <p class="text-[10px] text-teal-800/60 mt-3 font-medium italic">{{ item.function }}</p>
+                            <p class="text-[9px] text-slate-400 mt-1 uppercase tracking-widest font-bold">⏰ {{ item.timing }}</p>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-100 ml-4">
+                            <button @click="updateStock(item, 1)" class="w-10 h-10 rounded-xl bg-teal-900 text-white text-xl font-light">+</button>
+                            <span class="font-bold text-teal-950 text-sm">{{ item.count }}</span>
+                            <button @click="updateStock(item, -1)" class="w-10 h-10 rounded-xl bg-white text-slate-400 border border-slate-200 text-xl">-</button>
+                        </div>
+                    </div>
+                    
+                    <div v-if="item.note" class="mt-4 pt-3 border-t border-slate-100">
+                        <p class="text-[10px] text-orange-800/70 leading-relaxed italic">
+                            💡 注意：{{ item.note }}
+                        </p>
+                    </div>
+
+                    <p v-if="item.count <= 0" class="text-red-500 text-[9px] font-black mt-3 text-center uppercase tracking-[0.2em] animate-blink">
+                        Out of Stock / 需要補貨
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+        setup() {
+            const currentTab = ref('routine');
+            const isInflamed = ref(false);
+            const loading = ref(false);
+            const activeDay = ref(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
+            
+            // 確保網址正確
+            const API_URL = 'https://script.google.com/macros/s/AKfycbzYBgyyLQdhDdkN9bYY2G-_8jSqGa9bHbg2JVsrrWnxTXjlWhOK4PiYQGZXSAlqkD4/exec';
+            const stockList = ref([]);
+
+            const fetchStock = async () => {
+                loading.value = true;
+                try {
+                    const response = await fetch(API_URL);
+                    const data = await response.json();
+                    stockList.value = data.map(item => ({
+                        ...item,
+                        count: Number(item.count) || 0 
+                    }));
+                } catch (error) {
+                    console.error("讀取失敗:", error);
+                } finally {
+                    loading.value = false;
+                }
+            };
+
+            const updateStock = async (item, change) => {
+                const newCount = item.count + change;
+                if (newCount < 0) return;
+                
+                item.count = newCount;
+                
+                try {
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            name: item.name, 
+                            count: newCount 
+                        })
+                    });
+                } catch (error) {
+                    console.error("更新失敗:", error);
+                }
+            };
+
+            onMounted(fetchStock);
+
+            const weekSchedule = [
+                { name: "Mon", focus: "強效煥膚 (去油脂粒/舊印)", am: [{product:"Bicelle B5 + ACE", note:"雀斑位點塗兩遍"}, {product:"LRP SPF 50+", note:"防曬是去斑之本"}], pm: [{product:"CT 15% 酸", note:"局部 15分鐘洗掉"}, {product:"LRP B5 Baume", note:"厚塗修復"}] },
+                { name: "Tue", focus: "微針滲透 (提亮嘴角)", am: [{product:"Bicelle ACE + CT Magic Cream", note:"日間抗氧"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"VT Reedle Shot 300", note:"避開發炎位"}, {product:"VT PDRN Radiance", note:"提亮修復"}, {product:"CT Night Cream", note:"滋潤封閉"}] },
+                { name: "Wed", focus: "A醇代謝 (追擊雀斑/深色印)", am: [{product:"Bale VC 膠囊 (橙色)", note:"提亮膚色"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"Bicelle B5 + Balea 0.3% Retinol", note:"下巴印位重點按壓"}, {product:"VT Collagen Cream", note:"暖氣房加強保濕"}] },
+                { name: "Thu", focus: "舒緩修復 (解決暗沉)", am: [{product:"Bicelle ACE + CT Magic Water Cream", note:"全臉防禦"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"Balea 煙醯胺面膜", note:"嘴角重點敷"}, {product:"Bicelle B5 + Argan Oil", note:"深層滋養"}] },
+                { name: "Fri", focus: "溫和更新 (穩定膚質)", am: [{product:"Bicelle B5 + Balea VC 精華", note:"保濕抗氧"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"VT 100 + Balea Retinol 膠囊", note:"溫和代謝"}, {product:"CT Night Cream", note:"晚間抗老"}] },
+                { name: "Sat", focus: "密集補水 (消浮腫)", am: [{product:"Schaebens 眼膜 + CT Magic Serum", note:"早上消腫"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"Borghese 精華 + Balea 粉紅膠囊", note:"按摩嘴角眼周"}, {product:"VT Collagen Cream", note:"修復滋潤"}] },
+                { name: "Sun", focus: "加強去斑 (色素攻堅)", am: [{product:"Bicelle ACE + CT Magic Cream", note:"日間防禦"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"Bicelle B5 + Balea 0.3% Retinol", note:"針對色素區"}, {product:"LRP B5 Baume", note:"修復收尾"}] }
+            ];
+
+            return { currentTab, activeDay, weekSchedule, isInflamed, stockList, loading, updateStock };
+        }
+    }).mount('#app');
+    </script>
+</body>
+</html>
