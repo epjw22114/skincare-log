@@ -2,207 +2,205 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Skincare Journal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { --sage-bg: #acc1b4; }
-        body { 
-            background-color: var(--sage-bg); 
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+        body { background-color: var(--sage-bg); font-family: 'Inter', sans-serif; }
         .serif { font-family: 'Playfair Display', serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .card-shadow { box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15); }
-        .animate-blink { animation: blink 1.5s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .card-shadow { box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.08); }
+        .sticky-header { position: sticky; top: 0; z-index: 40; background: var(--sage-bg); }
+        input, select { font-size: 16px !important; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
     </style>
 </head>
 <body>
     <div id="app" class="min-h-screen pb-24">
         
-        <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/20 z-50 flex justify-around py-4 shadow-2xl">
-            <button @click="currentTab = 'routine'" :class="currentTab === 'routine' ? 'text-teal-900 font-bold scale-110' : 'text-slate-400'" class="transition-all">
-                <span class="block text-xl">🗓️</span>
-                <span class="text-[10px] uppercase tracking-widest mt-1">Routine</span>
-            </button>
-            <button @click="currentTab = 'stock'" :class="currentTab === 'stock' ? 'text-teal-900 font-bold scale-110' : 'text-slate-400'" class="transition-all">
-                <span class="block text-xl">📦</span>
-                <span class="text-[10px] uppercase tracking-widest mt-1">Stock</span>
-            </button>
-        </nav>
-
-        <div v-if="currentTab === 'routine'">
-            <header class="p-8 pb-4">
-                <div class="flex justify-between items-start mb-2">
-                    <h1 class="text-4xl serif text-white drop-shadow-sm italic">Skincare Journal</h1>
-                    <button @click="isInflamed = !isInflamed" 
-                        :class="['px-4 py-2 rounded-2xl text-[10px] font-black transition-all card-shadow border-2', 
-                                 isInflamed ? 'bg-orange-500 border-orange-400 text-white animate-pulse' : 'bg-white/20 border-white/40 text-white']">
-                        {{ isInflamed ? '下巴發炎中' : '穩定模式' }}
-                    </button>
-                </div>
-                <p class="text-white/80 text-[10px] tracking-[0.2em] font-medium uppercase">32歲 · 英國去斑模式 · METABOLIC</p>
+        <div v-if="currentTab === 'routine'" class="p-6">
+            <header class="mb-6 flex justify-between items-center">
+                <h1 class="text-3xl serif text-white italic">Skincare Journal</h1>
+                <button @click="isInflamed = !isInflamed" :class="isInflamed ? 'bg-orange-500 animate-pulse' : 'bg-white/20'" class="px-4 py-2 rounded-full text-[10px] text-white font-bold border border-white/30">
+                    {{ isInflamed ? '發炎應急' : '穩定模式' }}
+                </button>
             </header>
-
-            <div class="flex overflow-x-auto px-6 gap-4 no-scrollbar mb-6">
-                <button v-for="(day, index) in weekSchedule" :key="index"
-                    @click="activeDay = index"
-                    :class="['flex-shrink-0 w-14 h-14 rounded-2xl flex flex-col items-center justify-center text-xs transition-all',
-                             activeDay === index ? 'bg-white text-teal-900 font-bold card-shadow scale-110' : 'bg-white/10 text-white border border-white/10']">
+            
+            <div class="flex overflow-x-auto gap-3 no-scrollbar mb-6">
+                <button v-for="(day, index) in weekSchedule" :key="index" @click="activeDay = index"
+                    :class="activeDay === index ? 'bg-white text-teal-900 font-bold scale-105' : 'bg-white/10 text-white'"
+                    class="flex-shrink-0 w-12 h-12 rounded-xl text-xs transition-all border border-white/10">
                     {{ day.name }}
                 </button>
             </div>
 
-            <main class="px-6 space-y-6 max-w-md mx-auto">
-                <div class="bg-white/95 backdrop-blur-md rounded-[2.5rem] p-8 card-shadow">
-                    <div class="flex items-center gap-3 mb-6">
-                        <span class="text-2xl">☀️</span>
-                        <h2 class="text-xl serif text-teal-950 italic font-bold">Morning Defense</h2>
-                    </div>
-                    <ul class="space-y-6">
-                        <li v-for="(step, i) in weekSchedule[activeDay].am" :key="i" class="flex items-start gap-4">
-                            <span class="w-6 h-6 rounded-full bg-teal-900 text-white text-[10px] flex items-center justify-center shrink-0 mt-1 font-bold">{{ i+1 }}</span>
+            <main class="space-y-6 max-w-md mx-auto">
+                <div class="bg-white/95 backdrop-blur-md rounded-[2rem] p-6 card-shadow border border-white/20">
+                    <h2 class="text-lg serif text-teal-950 italic font-bold mb-4 flex items-center gap-2">☀️ Morning <span class="text-[10px] font-normal opacity-50">{{ weekSchedule[activeDay].focus }}</span></h2>
+                    <ul class="space-y-4">
+                        <li v-for="(step, i) in weekSchedule[activeDay].am" :key="i" class="flex gap-3">
+                            <span class="text-[10px] font-bold text-teal-700 mt-1 opacity-50">{{ i+1 }}</span>
                             <div>
-                                <p class="text-slate-800 font-bold leading-tight">{{ step.product }}</p>
-                                <p class="text-[10px] text-teal-700/60 uppercase tracking-widest mt-1 font-semibold">{{ step.note }}</p>
+                                <p class="text-sm font-bold text-slate-800 leading-tight">{{ step.product }}</p>
+                                <p class="text-[9px] text-teal-600/70 uppercase tracking-widest">{{ step.note }}</p>
                             </div>
                         </li>
                     </ul>
                 </div>
 
-                <div class="bg-white/95 backdrop-blur-md rounded-[2.5rem] p-8 card-shadow">
-                    <div class="flex items-center gap-3 mb-6">
-                        <span class="text-2xl">🌙</span>
-                        <h2 class="text-xl serif text-indigo-950 italic font-bold">Night Treatment</h2>
-                    </div>
-                    <div class="mb-6 p-4 rounded-2xl bg-teal-50/50 border border-teal-100/50">
-                        <p class="text-[9px] font-black text-teal-800/40 uppercase tracking-[0.2em] mb-1 text-center">Focus Target</p>
-                        <p class="text-sm text-teal-900 font-medium italic text-center">{{ isInflamed ? '局部發炎應急修復模式' : weekSchedule[activeDay].focus }}</p>
-                    </div>
-                    <ul class="space-y-6">
-                        <template v-if="isInflamed">
-                            <li class="flex items-start gap-4">
-                                <span class="w-6 h-6 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center shrink-0 mt-1 font-bold">1</span>
-                                <p class="text-slate-800 font-bold leading-tight">Bicelle Hydra B5 Gel <br><span class="text-[10px] text-orange-600 font-medium">補水基底</span></p>
-                            </li>
-                            <li class="flex items-start gap-4">
-                                <span class="w-6 h-6 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center shrink-0 mt-1 font-bold">2</span>
-                                <p class="text-slate-800 font-bold leading-tight">LRP B5 Baume <br><span class="text-[10px] text-orange-600 font-medium italic">厚塗發炎處 (下巴)</span></p>
-                            </li>
-                        </template>
-                        <template v-else>
-                            <li v-for="(step, i) in weekSchedule[activeDay].pm" :key="i" class="flex items-start gap-4">
-                                <span class="w-6 h-6 rounded-full bg-indigo-900 text-white text-[10px] flex items-center justify-center shrink-0 mt-1 font-bold">{{ i+1 }}</span>
-                                <div>
-                                    <p class="text-slate-800 font-bold leading-tight">{{ step.product }}</p>
-                                    <p class="text-[10px] text-indigo-700/60 uppercase tracking-widest mt-1 font-semibold">{{ step.note }}</p>
-                                </div>
-                            </li>
-                        </template>
+                <div class="bg-slate-900/90 backdrop-blur-md rounded-[2rem] p-6 card-shadow border border-white/10">
+                    <h2 class="text-lg serif text-teal-100 italic font-bold mb-4 flex items-center gap-2">🌙 Night <span class="text-[10px] font-normal opacity-50 text-teal-200/50">{{ weekSchedule[activeDay].focus }}</span></h2>
+                    <ul class="space-y-4">
+                        <li v-for="(step, i) in weekSchedule[activeDay].pm" :key="i" class="flex gap-3">
+                            <span class="text-[10px] font-bold text-teal-400 mt-1 opacity-40">{{ i+1 }}</span>
+                            <div>
+                                <p class="text-sm font-bold text-white leading-tight">{{ step.product }}</p>
+                                <p class="text-[9px] text-teal-300/60 uppercase tracking-widest">{{ step.note }}</p>
+                            </div>
+                        </li>
                     </ul>
                 </div>
             </main>
         </div>
 
-        <div v-if="currentTab === 'stock'" class="p-8 max-w-md mx-auto">
-            <div class="flex justify-between items-center mb-8 text-white">
-                <h1 class="text-4xl serif italic">Stock List</h1>
-                <div v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        <div v-if="currentTab === 'stock'">
+            <div class="sticky-header p-6 pb-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-3xl serif text-white italic">Stock List</h1>
+                    <button @click="openAddModal()" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-teal-900 shadow-lg font-bold text-xl">+</button>
+                </div>
+                <div class="space-y-3">
+                    <input v-model="searchQuery" type="text" placeholder="搜尋品牌、產品名稱..." 
+                        class="w-full px-4 py-3 rounded-2xl bg-white/90 border-none shadow-inner text-sm focus:ring-2 focus:ring-teal-500">
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                        <button @click="selectedCategory = ''" :class="!selectedCategory ? 'bg-teal-900 text-white' : 'bg-white/30 text-white'" class="px-4 py-1.5 rounded-full text-[11px] whitespace-nowrap">全部</button>
+                        <button v-for="cat in categories" :key="cat" @click="selectedCategory = cat" :class="selectedCategory === cat ? 'bg-teal-900 text-white' : 'bg-white/30 text-white'" class="px-4 py-1.5 rounded-full text-[11px] whitespace-nowrap">{{ cat }}</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="space-y-6">
-                <div v-for="(item, index) in stockList" :key="index" 
-                     class="bg-white/95 rounded-[2.5rem] p-6 card-shadow relative overflow-hidden transition-all">
-                    
-                    <div v-if="item.count <= 0" class="absolute left-0 top-0 bottom-0 w-2 bg-red-500 animate-pulse"></div>
-
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="mb-1">
-                                <span class="bg-teal-50 text-teal-700 text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">{{ item.category }}</span>
-                            </div>
-                            <h2 class="serif text-2xl text-teal-950 font-bold leading-tight italic">{{ item.brand }}</h2>
-                            <p class="text-sm font-semibold text-slate-500 mt-1 leading-snug">{{ item.name }}</p>
-                            
-                            <p class="text-[10px] text-teal-800/60 mt-3 font-medium italic">{{ item.function }}</p>
-                            <p class="text-[9px] text-slate-400 mt-1 uppercase tracking-widest font-bold">⏰ {{ item.timing }}</p>
+            <div class="px-6 space-y-3 max-w-md mx-auto mt-2">
+                <div v-if="loading" class="text-center py-10 text-white/50">加載中...</div>
+                <div v-for="(item, index) in filteredStock" :key="index" :class="item.count <= 0 ? 'border-l-4 border-red-400 bg-red-50/95' : 'bg-white/95'" class="p-4 rounded-2xl card-shadow flex justify-between items-center">
+                    <div class="flex-1 pr-4">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="text-[8px] bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded uppercase font-bold">{{ item.category }}</span>
                         </div>
-
-                        <div class="flex flex-col items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-100 ml-4">
-                            <button @click="updateStock(item, 1)" class="w-10 h-10 rounded-xl bg-teal-900 text-white text-xl font-light">+</button>
-                            <span class="font-bold text-teal-950 text-sm">{{ item.count }}</span>
-                            <button @click="updateStock(item, -1)" class="w-10 h-10 rounded-xl bg-white text-slate-400 border border-slate-200 text-xl">-</button>
+                        <h3 class="serif text-lg text-teal-950 font-bold leading-none italic">{{ item.brand }}</h3>
+                        <p class="text-xs text-slate-500 font-semibold mt-1">{{ item.name }}</p>
+                        <div class="flex gap-3 mt-2">
+                             <button @click="openAddModal(item)" class="text-[9px] text-teal-700 underline opacity-60">快速複製</button>
+                             <span v-if="item.note" @click="window.alert(item.note)" class="text-[9px] text-orange-600 italic cursor-pointer">💡 查看備註</span>
                         </div>
                     </div>
-                    
-                    <div v-if="item.note" class="mt-4 pt-3 border-t border-slate-100">
-                        <p class="text-[10px] text-orange-800/70 leading-relaxed italic">
-                            💡 注意：{{ item.note }}
-                        </p>
+                    <div class="flex flex-col items-center bg-slate-100 rounded-xl p-1 shrink-0">
+                        <button @click="updateStock(item, 1)" class="w-8 h-8 rounded-lg bg-teal-900 text-white font-bold">+</button>
+                        <span class="text-sm font-bold py-1 text-teal-950">{{ item.count }}</span>
+                        <button @click="updateStock(item, -1)" class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-400 font-bold">-</button>
                     </div>
-
-                    <p v-if="item.count <= 0" class="text-red-500 text-[9px] font-black mt-3 text-center uppercase tracking-[0.2em] animate-blink">
-                        Out of Stock / 需要補貨
-                    </p>
                 </div>
             </div>
         </div>
 
+        <div v-if="showAddModal" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+            <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 space-y-4 animate-slide-up">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl serif italic font-bold text-teal-950">{{ isEdit ? '快速複製產品' : '新增產品' }}</h2>
+                    <button @click="showAddModal = false" class="text-slate-400 text-2xl">&times;</button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input v-model="newItem.brand" placeholder="品牌" class="col-span-2 p-3 bg-slate-50 rounded-xl text-sm">
+                    <input v-model="newItem.name" placeholder="產品名稱" class="col-span-2 p-3 bg-slate-50 rounded-xl text-sm">
+                    <input v-model="newItem.category" placeholder="類別" class="p-3 bg-slate-50 rounded-xl text-sm">
+                    <input v-model="newItem.count" type="number" placeholder="數量" class="p-3 bg-slate-50 rounded-xl text-sm">
+                </div>
+                <button @click="submitNewItem" :disabled="submitting" class="w-full py-4 bg-teal-900 text-white rounded-2xl font-bold">
+                    {{ submitting ? '處理中...' : '確認入庫' }}
+                </button>
+            </div>
+        </div>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t z-50 flex justify-around py-4">
+            <button @click="currentTab = 'routine'" :class="currentTab === 'routine' ? 'text-teal-900 font-bold scale-110' : 'text-slate-400'">
+                <span class="block text-xl">🗓️</span>
+                <span class="text-[10px] uppercase tracking-widest mt-1">Routine</span>
+            </button>
+            <button @click="currentTab = 'stock'" :class="currentTab === 'stock' ? 'text-teal-900 font-bold scale-110' : 'text-slate-400'">
+                <span class="block text-xl">📦</span>
+                <span class="text-[10px] uppercase tracking-widest mt-1">Stock</span>
+            </button>
+        </nav>
     </div>
 
     <script>
-    const { createApp, ref, onMounted } = Vue;
+    const { createApp, ref, computed, onMounted } = Vue;
 
     createApp({
         setup() {
-            const currentTab = ref('routine');
-            const isInflamed = ref(false);
+            const API_URL = 'https://script.google.com/macros/s/AKfycby6WV6ks7S69YtZ1MaD3sRRnfGINdzUX8a7M_OZU-wiNeEJh-Fzzj2w3Jg3z0zfPcrM/exec';
+            const currentTab = ref('routine'); // 預設顯示 Stock 方便測試
+            const stockList = ref([]);
             const loading = ref(false);
+            const isInflamed = ref(false);
             const activeDay = ref(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
             
-            // 確保網址正確
-            const API_URL = 'https://script.google.com/macros/s/AKfycbzYBgyyLQdhDdkN9bYY2G-_8jSqGa9bHbg2JVsrrWnxTXjlWhOK4PiYQGZXSAlqkD4/exec';
-            const stockList = ref([]);
+            const searchQuery = ref('');
+            const selectedCategory = ref('');
+            const showAddModal = ref(false);
+            const submitting = ref(false);
+            const isEdit = ref(false);
+            const newItem = ref({ category: '', brand: '', name: '', count: 1 });
+
+            const categories = computed(() => {
+                const cats = stockList.value.map(i => i.category).filter(c => c);
+                return [...new Set(cats)];
+            });
+
+            const filteredStock = computed(() => {
+                return stockList.value.filter(item => {
+                    const q = searchQuery.value.toLowerCase();
+                    const matchSearch = (item.brand + item.name + item.category).toLowerCase().includes(q);
+                    const matchCat = selectedCategory.value ? item.category === selectedCategory.value : true;
+                    return matchSearch && matchCat;
+                });
+            });
 
             const fetchStock = async () => {
                 loading.value = true;
                 try {
-                    const response = await fetch(API_URL);
-                    const data = await response.json();
-                    stockList.value = data.map(item => ({
-                        ...item,
-                        count: Number(item.count) || 0 
-                    }));
-                } catch (error) {
-                    console.error("讀取失敗:", error);
-                } finally {
-                    loading.value = false;
-                }
+                    const res = await fetch(API_URL);
+                    const data = await res.json();
+                    stockList.value = data;
+                } catch (e) { console.error(e); }
+                finally { loading.value = false; }
             };
 
             const updateStock = async (item, change) => {
-                const newCount = item.count + change;
-                if (newCount < 0) return;
-                
-                item.count = newCount;
-                
-                try {
-                    await fetch(API_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            name: item.name, 
-                            count: newCount 
-                        })
-                    });
-                } catch (error) {
-                    console.error("更新失敗:", error);
+                item.count += change;
+                fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name: item.name, count: item.count }) });
+            };
+
+            const openAddModal = (template = null) => {
+                if (template) {
+                    newItem.value = { ...template, name: template.name + ' (Copy)', count: 1 };
+                    isEdit.value = true;
+                } else {
+                    newItem.value = { category: '', brand: '', name: '', count: 1 };
+                    isEdit.value = false;
                 }
+                showAddModal.value = true;
+            };
+
+            const submitNewItem = async () => {
+                submitting.value = true;
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'add', ...newItem.value }) });
+                stockList.value.unshift({ ...newItem.value });
+                showAddModal.value = false;
+                submitting.value = false;
             };
 
             onMounted(fetchStock);
@@ -210,14 +208,14 @@
             const weekSchedule = [
                 { name: "Mon", focus: "強效煥膚 (去油脂粒/舊印)", am: [{product:"Bicelle B5 + ACE", note:"雀斑位點塗兩遍"}, {product:"LRP SPF 50+", note:"防曬是去斑之本"}], pm: [{product:"CT 15% 酸", note:"局部 15分鐘洗掉"}, {product:"LRP B5 Baume", note:"厚塗修復"}] },
                 { name: "Tue", focus: "微針滲透 (提亮嘴角)", am: [{product:"Bicelle ACE + CT Magic Cream", note:"日間抗氧"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"VT Reedle Shot 300", note:"避開發炎位"}, {product:"VT PDRN Radiance", note:"提亮修復"}, {product:"CT Night Cream", note:"滋潤封閉"}] },
-                { name: "Wed", focus: "A醇代謝 (追擊雀斑/深色印)", am: [{product:"Bale VC 膠囊 (橙色)", note:"提亮膚色"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"Bicelle B5 + Balea 0.3% Retinol", note:"下巴印位重點按壓"}, {product:"VT Collagen Cream", note:"暖氣房加強保濕"}] },
+                { name: "Wed", focus: "A醇代謝 (追擊雀斑/深色印)", am: [{product:"Balea VC 膠囊 (橙色)", note:"提亮膚色"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"Bicelle B5 + Balea 0.3% Retinol", note:"下巴印位重點按壓"}, {product:"VT Collagen Cream", note:"暖氣房加強保濕"}] },
                 { name: "Thu", focus: "舒緩修復 (解決暗沉)", am: [{product:"Bicelle ACE + CT Magic Water Cream", note:"全臉防禦"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"Balea 煙醯胺面膜", note:"嘴角重點敷"}, {product:"Bicelle B5 + Argan Oil", note:"深層滋養"}] },
                 { name: "Fri", focus: "溫和更新 (穩定膚質)", am: [{product:"Bicelle B5 + Balea VC 精華", note:"保濕抗氧"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"VT 100 + Balea Retinol 膠囊", note:"溫和代謝"}, {product:"CT Night Cream", note:"晚間抗老"}] },
                 { name: "Sat", focus: "密集補水 (消浮腫)", am: [{product:"Schaebens 眼膜 + CT Magic Serum", note:"早上消腫"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"Borghese 精華 + Balea 粉紅膠囊", note:"按摩嘴角眼周"}, {product:"VT Collagen Cream", note:"修復滋潤"}] },
                 { name: "Sun", focus: "加強去斑 (色素攻堅)", am: [{product:"Bicelle ACE + CT Magic Cream", note:"日間防禦"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"Bicelle B5 + Balea 0.3% Retinol", note:"針對色素區"}, {product:"LRP B5 Baume", note:"修復收尾"}] }
             ];
 
-            return { currentTab, activeDay, weekSchedule, isInflamed, stockList, loading, updateStock };
+            return { currentTab, activeDay, weekSchedule, isInflamed, stockList, loading, updateStock, searchQuery, selectedCategory, categories, filteredStock, showAddModal, newItem, submitNewItem, submitting, openAddModal, isEdit };
         }
     }).mount('#app');
     </script>
