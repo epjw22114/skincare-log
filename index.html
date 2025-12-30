@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { --sage-bg: #acc1b4; }
-        body { background-color: var(--sage-bg); font-family: 'Inter', sans-serif; }
+        body { background-color: var(--sage-bg); font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .serif { font-family: 'Playfair Display', serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .card-shadow { box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.08); }
@@ -28,7 +28,7 @@
                 <h1 class="text-3xl serif text-white italic">Skincare Journal</h1>
                 <button @click="isInflamed = !isInflamed" 
                     :class="isInflamed ? 'bg-orange-500 animate-pulse' : 'bg-white/20'" 
-                    class="px-4 py-2 rounded-full text-[10px] text-white font-bold border border-white/30">
+                    class="px-4 py-2 rounded-full text-[10px] text-white font-bold border border-white/30 transition-colors">
                     {{ isInflamed ? '發炎應急' : '穩定模式' }}
                 </button>
             </header>
@@ -99,15 +99,16 @@
                         </div>
                         <h3 class="serif text-lg text-teal-950 font-bold leading-none italic">{{ item.brand }}</h3>
                         <p class="text-xs text-slate-500 font-semibold mt-1">{{ item.name }}</p>
+                        
                         <div class="flex gap-3 mt-2">
                              <button @click.stop="openAddModal(item)" class="text-[9px] text-teal-700 underline opacity-60">快速複製</button>
-                             <span v-if="item.note" @click.stop="window.alert(item.note)" class="text-[9px] text-orange-600 italic cursor-pointer">💡 查看備註</span>
+                             <button v-if="item.note" @click.stop="activeNote = item" class="text-[9px] text-orange-600 italic font-bold">💡 查看備註</button>
                         </div>
                     </div>
                     <div class="flex flex-col items-center bg-slate-100 rounded-xl p-1 shrink-0">
-                        <button @click="updateStock(item, 1)" class="w-8 h-8 rounded-lg bg-teal-900 text-white font-bold">+</button>
+                        <button @click.stop="updateStock(item, 1)" class="w-8 h-8 rounded-lg bg-teal-900 text-white font-bold">+</button>
                         <span class="text-sm font-bold py-1 text-teal-950">{{ item.count }}</span>
-                        <button @click="updateStock(item, -1)" class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-400 font-bold">-</button>
+                        <button @click.stop="updateStock(item, -1)" class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-400 font-bold">-</button>
                     </div>
                 </div>
             </div>
@@ -141,6 +142,16 @@
             </div>
         </div>
 
+        <div v-if="activeNote" class="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6" @click="activeNote = null">
+            <div class="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-slide-up" @click.stop>
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-xs font-bold text-orange-500 uppercase tracking-widest">用法備註</span>
+                    <button @click="activeNote = null" class="text-slate-300 text-2xl">&times;</button>
+                </div>
+                <p class="text-teal-950 font-medium leading-relaxed">{{ activeNote.note }}</p>
+            </div>
+        </div>
+
         <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t z-50 flex justify-around py-4">
             <button @click="currentTab = 'routine'" :class="currentTab === 'routine' ? 'text-teal-900 font-bold scale-110' : 'text-slate-400'">
                 <span class="block text-xl">🗓️</span>
@@ -158,11 +169,14 @@
 
     createApp({
         setup() {
-            const API_URL = 'https://script.google.com/macros/s/AKfycbyLDCn8lGZeAA-JaZ0WWhnFMuPKt50woLLYlGv8ZiOuH73yI1SJnLRbgrMs7LL4cYRk/exec';
+            // 替換為妳的 Apps Script URL
+            const API_URL = 'https://script.google.com/macros/s/AKfycbzseBGEgY_FbNn1eTsnjmnmOsQuxmFOrjNrK5rIRHtRadwcNTVbQ6B8dwdeuriZ3WEJ/exec';
+            
             const currentTab = ref('routine');
             const stockList = ref([]);
             const loading = ref(false);
             const isInflamed = ref(false);
+            const activeNote = ref(null);
             const activeDay = ref(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
             
             const searchQuery = ref('');
@@ -170,8 +184,8 @@
             const showAddModal = ref(false);
             const submitting = ref(false);
             const scanning = ref(false);
-            const isEdit = ref(false); // 控制是「新增」還是「編輯」
-            const oldName = ref('');   // 用於編輯時定位舊數據
+            const isEdit = ref(false);
+            const oldName = ref('');
             const newItem = ref({ category: '', brand: '', name: '', count: 1, note: '' });
 
             const weekSchedule = [
@@ -184,7 +198,6 @@
                 { name: "Sun", focus: "加強去斑 (色素攻堅)", am: [{product:"Bicelle ACE + CT Magic Cream", note:"日間防禦"}, {product:"LRP SPF 50+", note:"必塗防曬"}], pm: [{product:"Bicelle B5 + Balea 0.3% Retinol", note:"針對色素區"}, {product:"LRP B5 Baume", note:"修復收尾"}] }
             ];
 
-            // 動態計算當前 Routine (處理發炎模式)
             const currentRoutine = computed(() => {
                 if (!isInflamed.value) return weekSchedule[activeDay.value];
                 return {
@@ -219,8 +232,18 @@
             };
 
             const updateStock = async (item, change) => {
-                item.count += change;
-                fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name: item.name, count: item.count }) });
+                const newCount = item.count + change;
+                if (newCount < 0) return;
+                item.count = newCount;
+                fetch(API_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify({ 
+                        action: 'updateCount', 
+                        name: item.name, 
+                        count: item.count 
+                    }) 
+                });
             };
 
             const openAddModal = (template = null) => {
@@ -245,7 +268,7 @@
                 if (!file) return;
                 scanning.value = true;
                 try {
-                    const res = await Tesseract.recognize(file, 'eng+chi_sim');
+                    const res = await Tesseract.recognize(file, 'eng+chi_tra'); // 改為繁體辨識
                     const text = res.data.text;
                     const lines = text.split('\n').filter(l => l.trim().length > 2);
                     if (lines[0]) newItem.value.brand = lines[0].trim();
@@ -257,22 +280,25 @@
             const submitItem = async () => {
                 submitting.value = true;
                 const action = isEdit.value ? 'edit' : 'add';
-                await fetch(API_URL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    body: JSON.stringify({ action, oldName: oldName.value, ...newItem.value }) 
-                });
-                
-                // 本地同步更新
-                if (isEdit.value) {
-                    const idx = stockList.value.findIndex(i => i.name === oldName.value);
-                    stockList.value[idx] = { ...newItem.value };
-                } else {
-                    stockList.value.unshift({ ...newItem.value });
+                try {
+                    await fetch(API_URL, { 
+                        method: 'POST', 
+                        mode: 'no-cors', 
+                        body: JSON.stringify({ action, oldName: oldName.value, ...newItem.value }) 
+                    });
+                    
+                    if (isEdit.value) {
+                        const idx = stockList.value.findIndex(i => i.name === oldName.value);
+                        if (idx !== -1) stockList.value[idx] = { ...newItem.value };
+                    } else {
+                        stockList.value.unshift({ ...newItem.value });
+                    }
+                    showAddModal.value = false;
+                } catch (e) {
+                    alert("儲存失敗，請檢查網絡");
+                } finally {
+                    submitting.value = false;
                 }
-                
-                showAddModal.value = false;
-                submitting.value = false;
             };
 
             onMounted(fetchStock);
@@ -282,7 +308,7 @@
                 stockList, loading, updateStock, searchQuery, selectedCategory, 
                 categories, filteredStock, showAddModal, newItem, submitItem, 
                 submitting, openAddModal, openEditModal, isEdit, modalTitle, 
-                scanning, onFileChange 
+                scanning, onFileChange, activeNote
             };
         }
     }).mount('#app');
